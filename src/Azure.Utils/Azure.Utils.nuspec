@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/10/nuspec.xsd">
+    <metadata>
+        <id>Azure.Utils</id>
+        <version>0.0.0</version>
+        <authors>daravind</authors>
+        <description>This package has a collection of utilities that can operate against Azure Storage and Tables for performing backups and so on</description>
+    </metadata>
+	<files>
+	    <file src="Azure.Utils.dll" target="lib\net45\Azure.Utils.dll" />
+	</files>
+</package>
