@@ -13,7 +13,9 @@ namespace Azure.Utils.Storage.Blob
     {
         internal static async Task<IDictionary<string, ICloudBlob>> ListBlobs(CloudStorageAccount account, CloudBlobContainer container, string prefix)
         {
-            BlobContainerEventSource.Log.GatheringListOfBlobs(account.BlobEndpoint.ToString(), container.Name);
+            var log = BlobContainerEventSource.Log;
+
+            log.GatheringListOfBlobs(account.BlobEndpoint.ToString(), container.Name);
             if (await container.CreateIfNotExistsAsync())
             {
                 // The container did not exist. Just created it. Returning an emtpy dictionary
@@ -41,11 +43,11 @@ namespace Azure.Utils.Storage.Blob
                         .Results
                         .OfType<ICloudBlob>());
 
-                BlobContainerEventSource.Log.GatheredBlobListSegment(account.Credentials.AccountName, container.Name, results.Count);
+                log.GatheredBlobListSegment(account.Credentials.AccountName, container.Name, results.Count);
                 token = segment.ContinuationToken;
             } while (token != null);
 
-            BlobContainerEventSource.Log.GatheredListOfBlobs(results.Count, account.BlobEndpoint.ToString(), container.Name);
+            log.GatheredListOfBlobs(results.Count, account.BlobEndpoint.ToString(), container.Name);
             return results;
         }
 

@@ -23,31 +23,28 @@ namespace Microsoft.WindowsAzure.Storage.Blob
         public static async Task CopyFrom(this CloudBlobContainer container,
             CloudStorageAccount account,
             CloudBlobContainer sourceContainer,
-            string prefix,
+            string prefix = null,
             OverwriteOptions options = OverwriteOptions.Never,
             bool copyNotInDestination = true,
             bool deleteNotInSource = false,
-            bool allowSetDestMetadata = false,
-            CopyBlobContainerEventSource log = null)
+            bool allowSetDestMetadata = false)
         {
-            await CopyFrom(container, account, account, sourceContainer, prefix, options, copyNotInDestination, deleteNotInSource, allowSetDestMetadata, allowSAS: false, log: log);
+            await CopyFrom(container, account, account, sourceContainer, prefix, options, copyNotInDestination, deleteNotInSource, allowSetDestMetadata, allowSAS: false);
         }
 
         public static async Task CopyFrom(this CloudBlobContainer container,
             CloudStorageAccount account,
             CloudStorageAccount sourceAccount,
             CloudBlobContainer sourceContainer,
-            string prefix,
+            string prefix = null,
             OverwriteOptions options = OverwriteOptions.Never,
             bool copyNotInDestination = true,
             bool deleteNotInSource = false,
             bool allowSetDestMetadata = false,
-            bool allowSAS = true,
-            CopyBlobContainerEventSource log = null)
+            bool allowSAS = true)
         {
-            log = log ?? CopyBlobContainerEventSource.Log;
-            CopyBlobContainerUtil copyTask = new CopyBlobContainerUtil(log, sourceAccount, sourceContainer, account, container);
-            await copyTask.CopyBlobContainer(prefix, options, copyNotInDestination, deleteNotInSource, allowSetDestMetadata, allowSAS, log);
+            CopyBlobContainerUtil copyTask = new CopyBlobContainerUtil(sourceAccount, sourceContainer, account, container);
+            await copyTask.CopyBlobContainer(prefix, options, copyNotInDestination, deleteNotInSource, allowSetDestMetadata, allowSAS);
         }
     }
 }

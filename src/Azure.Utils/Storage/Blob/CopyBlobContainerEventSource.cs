@@ -32,16 +32,16 @@ namespace Azure.Utils.Storage.Blob
             get;
             private set;
         }
-        public new CopyBlobContainerEventSource Log
+
+        private CopyBlobContainerEventSource Log
         {
             get;
-            private set;
+            set;
         }
-        internal CopyBlobContainerUtil(CopyBlobContainerEventSource log,
-            CloudStorageAccount sourceStorage, CloudBlobContainer sourceContainer,
+        internal CopyBlobContainerUtil(CloudStorageAccount sourceStorage, CloudBlobContainer sourceContainer,
             CloudStorageAccount destinationStorage, CloudBlobContainer destinationContainer)
         {
-            Log = log;
+            Log = CopyBlobContainerEventSource.Log;
             SourceStorage = sourceStorage;
             SourceContainer = sourceContainer;
             DestinationStorage = destinationStorage;
@@ -53,11 +53,8 @@ namespace Azure.Utils.Storage.Blob
             bool copyNotInDestination = true,
             bool deleteNotInSource = false,
             bool allowSetDestMetadata = false,
-            bool allowSAS = true,
-            CopyBlobContainerEventSource log = null)
+            bool allowSAS = true)
         {
-            log = log ?? CopyBlobContainerEventSource.Log;
-
             // Gather Source Blobs            
             var srcBlobs = await BlobContainerUtil.ListBlobs(SourceStorage, SourceContainer, prefix);            
 
@@ -69,12 +66,20 @@ namespace Azure.Utils.Storage.Blob
             {
                 blobsToBeCopied = srcBlobs.Keys.Where(b => !destBlobs.Keys.Contains(b)).ToList();
             }
+            else
+            {
+                blobsToBeCopied = new List<string>();
+            }
 
             IList<string> blobsToBeOverwritten = null;
             IList<string> commonBlobs = null;
             if (options == OverwriteOptions.Always || options == OverwriteOptions.OnlyIfNewer)
             {
                 commonBlobs = blobsToBeOverwritten = srcBlobs.Keys.Where(b => !destBlobs.Keys.Contains(b)).ToList();
+            }
+            else if(options == OverwriteOptions.Never)
+            {
+                blobsToBeOverwritten = new List<string>();
             }
 
             if (options == OverwriteOptions.OnlyIfNewer)
@@ -104,7 +109,7 @@ namespace Azure.Utils.Storage.Blob
             }
 
             // Add the blobs to be overwritten to blobs to be copied
-            blobsToBeCopied.Concat(blobsToBeOverwritten);
+            blobsToBeCopied.Concat(blobsToBeOverwritten ?? Enumerable.Empty<string>());
             string sourceContainerSharedAccessUri = String.Empty;
             if (allowSAS)
             {
@@ -113,7 +118,7 @@ namespace Azure.Utils.Storage.Blob
                 policy.SharedAccessExpiryTime = DateTimeOffset.Now + TimeSpan.FromHours(2) + TimeSpan.FromMinutes(2 * blobsToBeCopied.Count);
                 policy.Permissions = SharedAccessBlobPermissions.Read;
                 sourceContainerSharedAccessUri = SourceContainer.GetSharedAccessSignature(policy);
-                log.SharedAccessSignatureURI(sourceContainerSharedAccessUri);
+                Log.SharedAccessSignatureURI(sourceContainerSharedAccessUri);
             }
 
             foreach (string blobName in blobsToBeCopied)
@@ -131,7 +136,7 @@ namespace Azure.Utils.Storage.Blob
         }
         private async Task CopyPackage(Uri sourceUri, string destinationBlobName)
         {
-            var destinationBlob = await DestinationContainer.GetBlobReferenceFromServerAsync(destinationBlobName);
+            var destinationBlob = DestinationContainer.GetBlockBlobReference(destinationBlobName);
             Log.StartingCopy(sourceUri.AbsoluteUri, destinationBlob.Uri.AbsoluteUri);
             await destinationBlob.StartCopyFromBlobAsync(sourceUri);
             Log.StartedCopy(sourceUri.AbsoluteUri, destinationBlob.Uri.AbsoluteUri);
