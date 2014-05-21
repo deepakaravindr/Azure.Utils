@@ -75,7 +75,7 @@ namespace Azure.Utils.Storage.Blob
             IList<string> commonBlobs = null;
             if (options == OverwriteOptions.Always || options == OverwriteOptions.OnlyIfNewer)
             {
-                commonBlobs = blobsToBeOverwritten = srcBlobs.Keys.Where(b => !destBlobs.Keys.Contains(b)).ToList();
+                commonBlobs = blobsToBeOverwritten = srcBlobs.Keys.Where(b => destBlobs.Keys.Contains(b)).ToList();
             }
             else if(options == OverwriteOptions.Never)
             {
@@ -109,7 +109,7 @@ namespace Azure.Utils.Storage.Blob
             }
 
             // Add the blobs to be overwritten to blobs to be copied
-            blobsToBeCopied.Concat(blobsToBeOverwritten ?? Enumerable.Empty<string>());
+            blobsToBeCopied = blobsToBeCopied.Concat(blobsToBeOverwritten ?? Enumerable.Empty<string>()).ToList();
             string sourceContainerSharedAccessUri = String.Empty;
             if (allowSAS)
             {
