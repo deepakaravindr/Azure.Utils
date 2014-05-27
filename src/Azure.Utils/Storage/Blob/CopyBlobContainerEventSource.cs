@@ -96,6 +96,7 @@ namespace Azure.Utils.Storage.Blob
                         var srcBlob = srcBlobs[blobName];
                         if (srcBlob.Properties.ETag.Equals(srcETag, StringComparison.OrdinalIgnoreCase))
                         {
+                            Log.SkipOverwrite(blobName);
                             shouldOverwrite = false;
                         }
                     }
@@ -150,6 +151,8 @@ namespace Azure.Utils.Storage.Blob
             var destinationBlob = DestinationContainer.GetBlockBlobReference(destinationBlobName);
             if(allowSetDestMetadata)
             {
+                Log.SettingMetadata(destinationBlobName);
+                destinationBlob.Metadata.Clear();
                 if(sourceBlob.Metadata != null)
                 {
                     foreach(var item in sourceBlob.Metadata)
@@ -204,6 +207,20 @@ namespace Azure.Utils.Storage.Blob
             Opcode = EventOpcode.Stop,
             Message = "Started deletion of blob {0}")]
         public void StartedDelete(string blob) { WriteEvent(24, blob); }
+
+        [Event(
+            eventId: 25,
+            Level = EventLevel.Informational,
+            Opcode = EventOpcode.Info,
+            Message = "Setting metadata on blob {0}")]
+        public void SettingMetadata(string blob) { WriteEvent(25, blob); }
+
+        [Event(
+            eventId: 26,
+            Level = EventLevel.Informational,
+            Opcode = EventOpcode.Info,
+            Message = "Skipping overwrite on blob {0}")]
+        public void SkipOverwrite(string blob) { WriteEvent(26, blob); }
 
         [Event(
             eventId: 30,
