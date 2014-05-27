@@ -50,10 +50,10 @@ namespace Azure.Utils.Storage.Blob
 
         internal async Task CopyBlobContainer(string prefix,
             OverwriteOptions options = OverwriteOptions.Never,
-            bool copyNotInDestination = true,
+            bool skipCopyNotInDestination = false,
             bool deleteNotInSource = false,
             bool allowSetDestMetadata = false,
-            bool allowSAS = true)
+            bool useSAS = false)
         {
             // Gather Source Blobs            
             var srcBlobs = await BlobContainerUtil.ListBlobs(SourceStorage, SourceContainer, prefix, allowSetDestMetadata ? BlobListingDetails.Metadata : BlobListingDetails.None);
@@ -62,7 +62,7 @@ namespace Azure.Utils.Storage.Blob
             var destBlobs = await BlobContainerUtil.ListBlobs(DestinationStorage, DestinationContainer, prefix, options == OverwriteOptions.OnlyIfNewer ? BlobListingDetails.Metadata : BlobListingDetails.None);
 
             IList<string> blobsToBeCopied = null;
-            if (copyNotInDestination)
+            if (!skipCopyNotInDestination)
             {
                 blobsToBeCopied = srcBlobs.Keys.Where(b => !destBlobs.Keys.Contains(b)).ToList();
             }
@@ -111,7 +111,7 @@ namespace Azure.Utils.Storage.Blob
             // Add the blobs to be overwritten to blobs to be copied
             blobsToBeCopied = blobsToBeCopied.Concat(blobsToBeOverwritten ?? Enumerable.Empty<string>()).ToList();
             string sourceContainerSharedAccessUri = String.Empty;
-            if (allowSAS)
+            if (useSAS)
             {
                 var policy = new SharedAccessBlobPolicy();
                 policy.SharedAccessStartTime = DateTimeOffset.Now;
@@ -125,7 +125,7 @@ namespace Azure.Utils.Storage.Blob
             {
                 var srcBlob = srcBlobs[blobName];
 
-                var srcUri = allowSAS ? new Uri(srcBlob.Uri, sourceContainerSharedAccessUri) : srcBlob.Uri;
+                var srcUri = useSAS ? new Uri(srcBlob.Uri, sourceContainerSharedAccessUri) : srcBlob.Uri;
                 await CopyPackage(srcUri, blobName, srcBlob, allowSetDestMetadata);
             }
 

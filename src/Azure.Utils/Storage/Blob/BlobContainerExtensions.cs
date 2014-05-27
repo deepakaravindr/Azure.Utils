@@ -25,11 +25,11 @@ namespace Microsoft.WindowsAzure.Storage.Blob
             CloudBlobContainer sourceContainer,
             string prefix = null,
             OverwriteOptions options = OverwriteOptions.Never,
-            bool copyNotInDestination = true,
+            bool skipCopyNotInDestination = false,
             bool deleteNotInSource = false,
             bool allowSetDestMetadata = false)
         {
-            await CopyFrom(container, account, account, sourceContainer, prefix, options, copyNotInDestination, deleteNotInSource, allowSetDestMetadata, allowSAS: false);
+            await CopyFrom(container, account, account, sourceContainer, prefix, options, skipCopyNotInDestination, deleteNotInSource, allowSetDestMetadata, useSAS: false);
         }
 
         public static async Task CopyFrom(this CloudBlobContainer container,
@@ -38,13 +38,13 @@ namespace Microsoft.WindowsAzure.Storage.Blob
             CloudBlobContainer sourceContainer,
             string prefix = null,
             OverwriteOptions options = OverwriteOptions.Never,
-            bool copyNotInDestination = true,
+            bool skipCopyNotInDestination = false,
             bool deleteNotInSource = false,
             bool allowSetDestMetadata = false,
-            bool allowSAS = true)
+            bool useSAS = false)
         {
             CopyBlobContainerUtil copyTask = new CopyBlobContainerUtil(sourceAccount, sourceContainer, account, container);
-            await copyTask.CopyBlobContainer(prefix, options, copyNotInDestination, deleteNotInSource, allowSetDestMetadata, allowSAS);
+            await copyTask.CopyBlobContainer(prefix, options, skipCopyNotInDestination, deleteNotInSource, allowSetDestMetadata, useSAS);
         }
     }
 }

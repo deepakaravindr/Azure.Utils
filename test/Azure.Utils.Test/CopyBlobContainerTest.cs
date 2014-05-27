@@ -84,7 +84,7 @@ namespace Azure.Utils.Test
                 // INTER ACCOUNT - INTRA DC
                 Console.WriteLine("To start copy...");
                 await pair.DestinationContainer.CopyFrom(pair.DestinationAccount, pair.SourceAccount, pair.SourceContainer, null,
-                    OverwriteOptions.Never, copyNotInDestination: true, deleteNotInSource: false, allowSetDestMetadata: false, allowSAS: false);
+                    OverwriteOptions.Never, skipCopyNotInDestination: false, deleteNotInSource: false, allowSetDestMetadata: false, useSAS: false);
                 Console.WriteLine("Copy Started");
             }
             catch (StorageException ex)
@@ -104,7 +104,7 @@ namespace Azure.Utils.Test
 
                 // INTRA ACCOUNT
                 Console.WriteLine("To start copy...");
-                await pair.DestinationContainer.CopyFrom(pair.Account, pair.SourceContainer, null, OverwriteOptions.Always, true, false, false);
+                await pair.DestinationContainer.CopyFrom(pair.Account, pair.SourceContainer, null, OverwriteOptions.Always, false, false, false);
                 Console.WriteLine("Copy Started");
             }
             catch (StorageException ex)
@@ -124,7 +124,7 @@ namespace Azure.Utils.Test
 
                 // INTRA ACCOUNT
                 Console.WriteLine("To start copy...");
-                await pair.DestinationContainer.CopyFrom(pair.Account, pair.SourceContainer, null, OverwriteOptions.Always, false, false, false);
+                await pair.DestinationContainer.CopyFrom(pair.Account, pair.SourceContainer, null, OverwriteOptions.Always, true, false, false);
                 Console.WriteLine("Copy Started");
             }
             catch (StorageException ex)
@@ -144,7 +144,7 @@ namespace Azure.Utils.Test
 
                 // INTRA ACCOUNT
                 Console.WriteLine("To start copy...");
-                await pair.DestinationContainer.CopyFrom(pair.Account, pair.SourceContainer, null, OverwriteOptions.Never, false, true, false);
+                await pair.DestinationContainer.CopyFrom(pair.Account, pair.SourceContainer, null, OverwriteOptions.Never, true, true, false);
                 Console.WriteLine("Copy Started");
             }
             catch (StorageException ex)
@@ -181,7 +181,7 @@ namespace Azure.Utils.Test
 
                 // INTRA ACCOUNT
                 Console.WriteLine("To start copy...");
-                await pair.DestinationContainer.CopyFrom(pair.Account, pair.SourceContainer, null, OverwriteOptions.OnlyIfNewer, true, false, true);
+                await pair.DestinationContainer.CopyFrom(pair.Account, pair.SourceContainer, null, OverwriteOptions.OnlyIfNewer, false, false, true);
                 Console.WriteLine("Copy Started");
             }
             catch (StorageException ex)
