@@ -83,7 +83,7 @@
     <MinorVersion>0</MinorVersion>
     <Patch>0</Patch>
     <!-- Prerelease version could be empty or contain '-*' since prerelease part of semantic version should always start with hyphen -->
-    <PrereleaseVersion>-alpha</PrereleaseVersion>
+    <PrereleaseVersion>-beta</PrereleaseVersion>
     <PackageVersion>$(MajorVersion).$(MinorVersion).$(Patch)$(PrereleaseVersion)</PackageVersion>
   </PropertyGroup>
   <Target Name="AfterBuild">
