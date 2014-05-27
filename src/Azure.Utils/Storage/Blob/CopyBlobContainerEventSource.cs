@@ -12,25 +12,25 @@ namespace Azure.Utils.Storage.Blob
     internal class CopyBlobContainerUtil
     {
         public const string SourceETagKey = "srcETag";
-        public CloudStorageAccount SourceStorage
+        private CloudStorageAccount SourceStorage
         {
             get;
-            private set;
+            set;
         }
-        public CloudStorageAccount DestinationStorage
+        private CloudStorageAccount DestinationStorage
         {
             get;
-            private set;
+            set;
         }
-        public CloudBlobContainer SourceContainer
+        private CloudBlobContainer SourceContainer
         {
             get;
-            private set;
+            set;
         }
-        public CloudBlobContainer DestinationContainer
+        private CloudBlobContainer DestinationContainer
         {
             get;
-            private set;
+            set;
         }
 
         private CopyBlobContainerEventSource Log
@@ -56,10 +56,10 @@ namespace Azure.Utils.Storage.Blob
             bool allowSAS = true)
         {
             // Gather Source Blobs            
-            var srcBlobs = await BlobContainerUtil.ListBlobs(SourceStorage, SourceContainer, prefix);            
+            var srcBlobs = await BlobContainerUtil.ListBlobs(SourceStorage, SourceContainer, prefix, allowSetDestMetadata ? BlobListingDetails.Metadata : BlobListingDetails.None);
 
             // Gather Destination Blobs
-            var destBlobs = await BlobContainerUtil.ListBlobs(DestinationStorage, DestinationContainer, prefix);
+            var destBlobs = await BlobContainerUtil.ListBlobs(DestinationStorage, DestinationContainer, prefix, options == OverwriteOptions.OnlyIfNewer ? BlobListingDetails.Metadata : BlobListingDetails.None);
 
             IList<string> blobsToBeCopied = null;
             if (copyNotInDestination)
@@ -88,11 +88,10 @@ namespace Azure.Utils.Storage.Blob
                 foreach (var blobName in commonBlobs)
                 {
                     var destBlob = destBlobs[blobName];
-                    await destBlob.FetchAttributesAsync();
 
                     string srcETag;
                     bool shouldOverwrite = true;
-                    if (destBlob.Metadata.TryGetValue(SourceETagKey, out srcETag))
+                    if (destBlob.Metadata != null && destBlob.Metadata.TryGetValue(SourceETagKey, out srcETag))
                     {
                         var srcBlob = srcBlobs[blobName];
                         if (srcBlob.Properties.ETag.Equals(srcETag, StringComparison.OrdinalIgnoreCase))
@@ -124,8 +123,9 @@ namespace Azure.Utils.Storage.Blob
             foreach (string blobName in blobsToBeCopied)
             {
                 var srcBlob = srcBlobs[blobName];
+
                 var srcUri = allowSAS ? new Uri(srcBlob.Uri, sourceContainerSharedAccessUri) : srcBlob.Uri;
-                await CopyPackage(srcUri, blobName);
+                await CopyPackage(srcUri, blobName, srcBlob, allowSetDestMetadata);
             }
 
             IEnumerable<string> blobsToBeDeleted = null;
@@ -133,10 +133,32 @@ namespace Azure.Utils.Storage.Blob
             {
                 blobsToBeDeleted = destBlobs.Keys.Where(b => !srcBlobs.Keys.Contains(b));
             }
+            else
+            {
+                blobsToBeDeleted = new List<string>();
+            }
+
+            foreach(string blobName in blobsToBeDeleted)
+            {
+                Log.StartingDelete(blobName);
+                await destBlobs[blobName].DeleteIfExistsAsync();
+                Log.StartedDelete(blobName);
+            }
         }
-        private async Task CopyPackage(Uri sourceUri, string destinationBlobName)
+        private async Task CopyPackage(Uri sourceUri, string destinationBlobName, ICloudBlob sourceBlob, bool allowSetDestMetadata)
         {
             var destinationBlob = DestinationContainer.GetBlockBlobReference(destinationBlobName);
+            if(allowSetDestMetadata)
+            {
+                if(sourceBlob.Metadata != null)
+                {
+                    foreach(var item in sourceBlob.Metadata)
+                    {
+                        destinationBlob.Metadata.Add(item);
+                    }
+                }
+                destinationBlob.Metadata.Add(SourceETagKey, sourceBlob.Properties.ETag);
+            }
             Log.StartingCopy(sourceUri.AbsoluteUri, destinationBlob.Uri.AbsoluteUri);
             await destinationBlob.StartCopyFromBlobAsync(sourceUri);
             Log.StartedCopy(sourceUri.AbsoluteUri, destinationBlob.Uri.AbsoluteUri);

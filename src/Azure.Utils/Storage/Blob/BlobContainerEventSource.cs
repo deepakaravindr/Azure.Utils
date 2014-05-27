@@ -11,7 +11,7 @@ namespace Azure.Utils.Storage.Blob
 {
     internal static class BlobContainerUtil
     {
-        internal static async Task<IDictionary<string, ICloudBlob>> ListBlobs(CloudStorageAccount account, CloudBlobContainer container, string prefix)
+        internal static async Task<IDictionary<string, ICloudBlob>> ListBlobs(CloudStorageAccount account, CloudBlobContainer container, string prefix, BlobListingDetails blobListingDetails = BlobListingDetails.None)
         {
             var log = BlobContainerEventSource.Log;
 
@@ -32,7 +32,7 @@ namespace Azure.Utils.Storage.Blob
                 segment = await container.ListBlobsSegmentedAsync(
                     prefix: prefix,
                     useFlatBlobListing: true,
-                    blobListingDetails: BlobListingDetails.None,
+                    blobListingDetails: blobListingDetails,
                     maxResults: null,
                     currentToken: token,
                     options: blobRequestOptions,
